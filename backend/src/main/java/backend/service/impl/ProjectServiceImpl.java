@@ -14,11 +14,13 @@ import backend.service.UserService;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.List;
  * @author <a href="https://github.com/Polarisyo">Polaris</a>
  */
 @Service
+@Slf4j
 public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> implements ProjectService {
 
     @Resource
@@ -91,12 +94,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         Long userId = request.getUserId();
         ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR);
         QueryWrapper wrapper = QueryWrapper.create();
-        wrapper.select().from("PROJECT")
-                .where("USER_ID = {0}", userId)  // 用户ID为必填条件
-                .and("PROJECT_NAME LIKE {0}", "%" + projectName + "%", StringUtils.isNotBlank(projectName))  // 项目名称模糊查询
-                .and("PROJECT_TYPE = {0}", projectType, StringUtils.isNotBlank(projectType))  // 项目类型精确匹配
-                .and("PROJECT_STATUS = {0}", projectStatus, StringUtils.isNotBlank(projectStatus))  // 项目状态精确匹配
-                .and("IS_PUBLIC = {0}", isPublic);// 是否公开精确匹配
+        wrapper.select().eq("userId", userId)
+                .like("projectName", projectName)
+                .eq("projectType", projectType)
+                .eq("isPublic",isPublic)
+                .eq("projectStatus", projectStatus);
         List<Project> projects = this.getMapper().selectListByQuery(wrapper);
 
         return projects.stream().map(this::getProjectVO).toList();

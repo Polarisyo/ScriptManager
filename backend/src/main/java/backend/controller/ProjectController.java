@@ -6,6 +6,8 @@ import backend.model.dto.project.ProjectAddRequest;
 import backend.model.dto.project.ProjectEditRequest;
 import backend.model.dto.project.ProjectQueryRequest;
 import backend.model.vo.ProjectVO;
+import backend.model.vo.UserVO;
+import backend.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +35,9 @@ public class ProjectController {
 
     @Resource
     private ProjectService projectService;
+
+    @Resource
+    private UserService userService;
 
     /**
      * 保存项目表。
@@ -75,7 +80,9 @@ public class ProjectController {
      * @return 所有数据
      */
     @PostMapping("list")
-    public BaseResponse<List<ProjectVO>> list(@RequestBody ProjectQueryRequest request) {
+    public BaseResponse<List<ProjectVO>> list(@RequestBody ProjectQueryRequest request, HttpServletRequest req) {
+        UserVO loginUser = userService.getLoginUser(req);
+        request.setUserId(loginUser.getId());
         List<ProjectVO> vos = projectService.queryProject(request);
         return ResultUtils.success(vos);
     }

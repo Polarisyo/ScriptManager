@@ -48,6 +48,11 @@ public class UserController {
         UserVO userVO = userService.userLogin(userAccount, userPwd, request);
         return ResultUtils.success(userVO);
     }
+    @GetMapping("/get/login")
+    public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
+        UserVO loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(loginUser);
+    }
 
     /**
      * 根据主键删除用户。
