@@ -37,6 +37,7 @@ create table if not exists  project
     lastShotIndex      INT           DEFAULT 0 COMMENT '最后操作的分镜序号',
     currentVersion     INT           DEFAULT 1 COMMENT '当前版本号',
     maxVersion         INT           DEFAULT 1 COMMENT '最大版本号',
+    shotOrder          JSON NOT NULL DEFAULT '[]' comment '分镜顺序数组',
 
     isTemplate         TINYINT(1)    DEFAULT 0 COMMENT '是否为模板（0:否, 1:是）',
     isDeleted          TINYINT(1)    DEFAULT 0 COMMENT '软删除标记（0:正常, 1:已删除）',
@@ -79,7 +80,7 @@ create table if not exists shot
     INDEX idx_orderIndex (orderIndex) COMMENT '排序序号索引',
     INDEX idx_shotStatus (shotStatus) COMMENT '分镜状态索引',
     INDEX idx_isDeleted (isDeleted) COMMENT '删除标记索引',
-    UNIQUE KEY uk_project_shot_number (projectId) COMMENT '项目内分镜编号唯一约束'
+    UNIQUE KEY uk_project_shot_number (projectId, orderIndex) COMMENT '项目内分镜编号唯一约束'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='分镜主表';

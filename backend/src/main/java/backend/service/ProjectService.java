@@ -21,14 +21,14 @@ public interface ProjectService extends IService<Project> {
      * @param request
      * @return
      */
-    long addProject(ProjectAddRequest request, HttpServletRequest req);
+    long addProject(ProjectAddRequest request);
 
     /**
      *
      * @param request
      * @return
      */
-    ProjectVO editProject(ProjectEditRequest request, HttpServletRequest req);
+    ProjectVO editProject(ProjectEditRequest request);
 
     /**
      *

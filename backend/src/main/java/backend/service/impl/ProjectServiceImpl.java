@@ -8,22 +8,21 @@ import backend.model.dto.project.ProjectEditRequest;
 import backend.model.dto.project.ProjectQueryRequest;
 import backend.model.entity.Project;
 import backend.model.vo.ProjectVO;
-import backend.model.vo.UserVO;
 import backend.service.ProjectService;
 import backend.service.UserService;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
+import cn.hutool.json.JSONUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 项目表 服务层实现。
@@ -44,9 +43,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
-    public long addProject(ProjectAddRequest request, HttpServletRequest req) {
+    public long addProject(ProjectAddRequest request) {
         ThrowUtils.throwIf(ObjectUtil.isNull(request), ErrorCode.PARAMS_ERROR);
-        UserVO loginUser = userService.getLoginUser(req);
 
         String projectName = request.getProjectName();
         String projectDescription = request.getProjectDescription();
@@ -55,7 +53,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         projectInfoValid(projectName, projectDescription, projectType);
         Project project = new Project();
         BeanUtil.copyProperties(request, project);
-        project.setUserId(loginUser.getId());
+        project.setShotOrder(JSONUtil.toJsonStr(new Integer[]{}));
 
         boolean save = this.save(project);
         ThrowUtils.throwIf(!save, ErrorCode.SYSTEM_ERROR);
@@ -64,9 +62,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     }
 
     @Override
-    public ProjectVO editProject(ProjectEditRequest request, HttpServletRequest req) {
-        UserVO loginUser = userService.getLoginUser(req);
-
+    public ProjectVO editProject(ProjectEditRequest request) {
         ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
         Long id = request.getId();
         ThrowUtils.throwIf(id < 0, ErrorCode.PARAMS_ERROR);
@@ -75,8 +71,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         String projectType = request.getProjectType();
         projectInfoValid(projectName, projectDescription, projectType);
 
-        Project project = new Project();
-        project.setUserId(loginUser.getId());
+        Project project = this.getById(id);
+        ThrowUtils.throwIf(project == null, ErrorCode.PARAMS_ERROR, "项目不存在");
+        ThrowUtils.throwIf(!Objects.equals(project.getUserId(), request.getUserId()), ErrorCode.NO_AUTH_ERROR);
+
         BeanUtil.copyProperties(request, project);
         boolean res = this.updateById(project);
         ThrowUtils.throwIf(!res, ErrorCode.SYSTEM_ERROR);
@@ -111,7 +109,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             return null;
         }
         ProjectVO vo = new ProjectVO();
-        BeanUtil.copyProperties(project, vo);
+        BeanUtil.copyProperties(project, vo, "shotOrder");
+        String shotOrderStr = project.getShotOrder();
+        if (shotOrderStr == null || shotOrderStr.trim().isEmpty() || "[]".equals(shotOrderStr.trim())) {
+            vo.setShotOrder(new Integer[0]);
+        } else {
+            vo.setShotOrder(JSONUtil.toList(shotOrderStr, Integer.class).toArray(new Integer[0]));
+        }
         return vo;
     }
 

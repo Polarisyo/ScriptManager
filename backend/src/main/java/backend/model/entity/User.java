@@ -5,6 +5,7 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -18,6 +19,7 @@ import java.io.Serial;
  *
  * @author <a href="https://github.com/Polarisyo">Polaris</a>
  */
+@Data
 @Table("user")
 public class User implements Serializable {
 
@@ -107,117 +109,4 @@ public class User implements Serializable {
      */
     @Column("lastLoginTime")
     private Timestamp lastLoginTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUserAccount() {
-        return userAccount;
-    }
-
-    public void setUserAccount(String userAccount) {
-        this.userAccount = userAccount;
-    }
-
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public void setUserPassword(String userPassword) {
-        this.userPassword = userPassword;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getUserAvatar() {
-        return userAvatar;
-    }
-
-    public void setUserAvatar(String userAvatar) {
-        this.userAvatar = userAvatar;
-    }
-
-    public String getUserProfile() {
-        return userProfile;
-    }
-
-    public void setUserProfile(String userProfile) {
-        this.userProfile = userProfile;
-    }
-
-    public String getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(String userRole) {
-        this.userRole = userRole;
-    }
-
-    public LocalDateTime getEditTime() {
-        return editTime;
-    }
-
-    public void setEditTime(LocalDateTime editTime) {
-        this.editTime = editTime;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Integer getIsDelete() {
-        return isDelete;
-    }
-
-    public void setIsDelete(Integer isDelete) {
-        this.isDelete = isDelete;
-    }
-
-    public String getSubscriptionPlan() {
-        return subscriptionPlan;
-    }
-
-    public void setSubscriptionPlan(String subscriptionPlan) {
-        this.subscriptionPlan = subscriptionPlan;
-    }
-
-    public Integer getAiCredits() {
-        return aiCredits;
-    }
-
-    public void setAiCredits(Integer aiCredits) {
-        this.aiCredits = aiCredits;
-    }
-
-    public Timestamp getLastLoginTime() {
-        return lastLoginTime;
-    }
-
-    public void setLastLoginTime(Timestamp lastLoginTime) {
-        this.lastLoginTime = lastLoginTime;
-    }
-
 }

@@ -50,4 +50,6 @@ public class ProjectAddRequest implements Serializable {
      */
     private Boolean isPublic;
 
+    private Long userId;
+
 }

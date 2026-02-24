@@ -28,4 +28,10 @@ public class ThrowUtils {
     public static void throwIf(boolean condition, ErrorCode errorCode, String message) {
         throwIf(condition, new BusinessException(errorCode, message));
     }
+    /**
+     * @param condition
+     */
+    public static void throwIfSqlError(boolean condition) {
+        throwIf(condition, new BusinessException(ErrorCode.SYSTEM_ERROR, "数据库异常"));
+    }
 }

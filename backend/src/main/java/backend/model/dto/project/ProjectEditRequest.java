@@ -64,4 +64,5 @@ public class ProjectEditRequest implements Serializable {
 
     private String projectStatus;
 
+    private Long userId;
 }

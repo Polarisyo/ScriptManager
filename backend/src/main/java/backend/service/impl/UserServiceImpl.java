@@ -1,25 +1,25 @@
 package backend.service.impl;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
 
 import backend.constant.UserConstant;
 import backend.exception.ErrorCode;
 import backend.exception.ThrowUtils;
+import backend.mapper.UserMapper;
+import backend.model.dto.user.UserEditRequest;
+import backend.model.entity.User;
 import backend.model.enums.UserPlanEnum;
 import backend.model.enums.UserRoleEnum;
 import backend.model.vo.UserVO;
+import backend.service.UserService;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.mybatisflex.core.query.QueryCondition;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import backend.model.entity.User;
-import backend.mapper.UserMapper;
-import backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * 用户 服务层实现。
@@ -27,10 +27,17 @@ import org.springframework.util.DigestUtils;
  * @author <a href="https://github.com/Polarisyo">Polaris</a>
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements UserService{
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private static void userAccountAndPwdValid(String userAccount, String userPwd) {
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPwd), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(userAccount.length() < 4 || userAccount.length() > 30 || userPwd.length() < 4 || userPwd.length() > 30, ErrorCode.PARAMS_ERROR);
+
+    }
 
     /**
      * 验证输入信息，校验是否存在，加密密码，储存到数据库
+     *
      * @param userAccount
      * @param userPwd
      * @param checkPwd
@@ -57,13 +64,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
         return user.getId();
     }
 
-    private static void userAccountAndPwdValid(String userAccount, String userPwd) {
-        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPwd), ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(userAccount.length() < 4 || userAccount.length() > 30
-                || userPwd.length() < 4 || userPwd.length() > 30, ErrorCode.PARAMS_ERROR);
-
-    }
-
     @Override
     public UserVO userLogin(String userAccount, String userPwd, HttpServletRequest request) {
         userAccountAndPwdValid(userAccount, userPwd);
@@ -74,7 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
         List<User> users = this.getMapper().selectListByQuery(wrapper);
         ThrowUtils.throwIf(users.size() != 1, ErrorCode.PARAMS_ERROR, "账户不存在或者密码错误");
         User user = users.getFirst();
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user.getId());
 
         return getUserVO(user);
     }
@@ -91,8 +91,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
 
     @Override
     public UserVO getLoginUser(HttpServletRequest request) {
-        User user = (User)request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        ThrowUtils.throwIf(user == null || user.getId() == null, ErrorCode.NOT_LOGIN_ERROR);
+        Object obj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        ThrowUtils.throwIf(obj == null, ErrorCode.NOT_LOGIN_ERROR);
+        Long userId = (Long) obj;
+        User user = this.getById(userId);
+        ThrowUtils.throwIf(user == null || user.getId() == null,
+                ErrorCode.NOT_LOGIN_ERROR);
+        return getUserVO(user);
+    }
+
+    @Override
+    public UserVO updateUserInfo(UserEditRequest request) {
+        String userAccount = request.getUserAccount();
+        String userName = request.getUserName();
+        String userAvatar = request.getUserAvatar();
+        String userProfile = request.getUserProfile();
+
+        //todo 校验参数
+        User user = this.getById(request.getUserId());
+        ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户不存在");
+        BeanUtil.copyProperties(request, user);
+        boolean save = this.updateById(user);
+        ThrowUtils.throwIfSqlError(!save);
+
         return getUserVO(user);
     }
 

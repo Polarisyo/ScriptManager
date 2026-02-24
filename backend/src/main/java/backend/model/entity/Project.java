@@ -5,6 +5,7 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.io.Serial;
  *
  * @author <a href="https://github.com/Polarisyo">Polaris</a>
  */
+@Data
 @Table("project")
 public class Project implements Serializable {
 
@@ -91,6 +93,12 @@ public class Project implements Serializable {
     private Integer lastShotIndex;
 
     /**
+     * 分镜顺序数组
+     */
+    @Column("shotOrder")
+    private String shotOrder;
+
+    /**
      * 当前版本号
      */
     @Column("currentVersion")
@@ -137,157 +145,4 @@ public class Project implements Serializable {
      */
     @Column("deleteTime")
     private LocalDateTime deleteTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
-    public String getProjectDescription() {
-        return projectDescription;
-    }
-
-    public void setProjectDescription(String projectDescription) {
-        this.projectDescription = projectDescription;
-    }
-
-    public String getProjectType() {
-        return projectType;
-    }
-
-    public void setProjectType(String projectType) {
-        this.projectType = projectType;
-    }
-
-    public String getProjectStatus() {
-        return projectStatus;
-    }
-
-    public void setProjectStatus(String projectStatus) {
-        this.projectStatus = projectStatus;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getCoverUrl() {
-        return coverUrl;
-    }
-
-    public void setCoverUrl(String coverUrl) {
-        this.coverUrl = coverUrl;
-    }
-
-    public Integer getShotCount() {
-        return shotCount;
-    }
-
-    public void setShotCount(Integer shotCount) {
-        this.shotCount = shotCount;
-    }
-
-    public Integer getTotalDuration() {
-        return totalDuration;
-    }
-
-    public void setTotalDuration(Integer totalDuration) {
-        this.totalDuration = totalDuration;
-    }
-
-    public BigDecimal getProgressRate() {
-        return progressRate;
-    }
-
-    public void setProgressRate(BigDecimal progressRate) {
-        this.progressRate = progressRate;
-    }
-
-    public Integer getLastShotIndex() {
-        return lastShotIndex;
-    }
-
-    public void setLastShotIndex(Integer lastShotIndex) {
-        this.lastShotIndex = lastShotIndex;
-    }
-
-    public Integer getCurrentVersion() {
-        return currentVersion;
-    }
-
-    public void setCurrentVersion(Integer currentVersion) {
-        this.currentVersion = currentVersion;
-    }
-
-    public Integer getMaxVersion() {
-        return maxVersion;
-    }
-
-    public void setMaxVersion(Integer maxVersion) {
-        this.maxVersion = maxVersion;
-    }
-
-    public Boolean getIsTemplate() {
-        return isTemplate;
-    }
-
-    public void setIsTemplate(Boolean isTemplate) {
-        this.isTemplate = isTemplate;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
-    }
-
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public LocalDateTime getDeleteTime() {
-        return deleteTime;
-    }
-
-    public void setDeleteTime(LocalDateTime deleteTime) {
-        this.deleteTime = deleteTime;
-    }
-
 }

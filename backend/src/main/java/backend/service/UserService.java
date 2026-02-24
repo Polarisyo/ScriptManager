@@ -1,5 +1,6 @@
 package backend.service;
 
+import backend.model.dto.user.UserEditRequest;
 import backend.model.vo.UserVO;
 import com.mybatisflex.core.service.IService;
 import backend.model.entity.User;
@@ -19,5 +20,6 @@ public interface UserService extends IService<User> {
     UserVO getUserVO(User user);
 
     UserVO getLoginUser(HttpServletRequest request);
+    UserVO updateUserInfo(UserEditRequest request);
 
 }

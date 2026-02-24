@@ -93,4 +93,8 @@ public class ProjectVO implements Serializable {
      * 创建用户
      */
     private UserVO user;
+    /**
+     * 分镜顺序
+     */
+    private Integer[] shotOrder;
 }

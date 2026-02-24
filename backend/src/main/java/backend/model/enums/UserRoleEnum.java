@@ -17,7 +17,7 @@ public enum UserRoleEnum {
         this.value = value;
     }
 
-    public UserRoleEnum getEnumByValue(String value) {
+    public static UserRoleEnum getEnumByValue(String value) {
         if(StrUtil.isBlank(value)) {
             return null;
         }
