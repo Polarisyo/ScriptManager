@@ -2,9 +2,9 @@
 /* eslint-disable */
 import request from '@/request'
 
-/** GET /health/ */
-export async function health(options?: { [key: string]: any }) {
-  return request<string>('/health/', {
+/** 此处后端没有提供注释 GET /heath/ */
+export async function mainHealth(options?: { [key: string]: any }) {
+  return request<string>('/heath/', {
     method: 'GET',
     ...(options || {}),
   })

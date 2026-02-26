@@ -1,109 +1,139 @@
 <template>
   <div class="project-list-container">
-    <div class="project-header">
-      <h1>项目列表</h1>
+    <div class="page-header">
+      <div class="page-title">
+        <el-icon :size="28"><FolderOpened /></el-icon>
+        <h1>项目列表</h1>
+      </div>
+
       <div class="header-actions">
-        <el-button type="primary" @click="handleCreateProject">
-          <el-icon><Plus /></el-icon>
+        <el-button type="primary" :icon="Plus" size="large" @click="handleCreateProject">
           新建项目
         </el-button>
       </div>
     </div>
 
-    <div class="project-content">
-      <div class="filter-section">
+    <div class="page-content">
+      <div class="filters-bar">
         <el-input
-          v-model="searchQuery"
+          v-model="searchKeyword"
           placeholder="搜索项目..."
-          prefix-icon="Search"
+          :prefix-icon="Search"
           clearable
-          @change="handleSearch"
+          style="width: 200px; margin-right: 12px"
         />
+
         <el-select
-          v-model="statusFilter"
-          placeholder="项目状态"
-          clearable
-          @change="handleFilter"
-          style="margin-left: 12px"
-        >
-          <el-option label="全部" value="" />
-          <el-option label="进行中" value="进行中" />
-          <el-option label="已完成" value="已完成" />
-          <el-option label="草稿" value="草稿" />
-        </el-select>
-        <el-select
-          v-model="typeFilter"
+          v-model="projectType"
           placeholder="项目类型"
           clearable
-          @change="handleFilter"
-          style="margin-left: 12px"
+          style="width: 150px; margin-right: 12px"
         >
           <el-option label="全部" value="" />
-          <el-option label="宣传片" value="宣传片" />
-          <el-option label="教程" value="教程" />
           <el-option label="短视频" value="短视频" />
           <el-option label="广告" value="广告" />
+          <el-option label="宣传片" value="宣传片" />
+          <el-option label="MV" value="MV" />
+        </el-select>
+
+        <el-select
+          v-model="projectStatus"
+          placeholder="项目状态"
+          clearable
+          style="width: 150px; margin-right: 12px"
+        >
+          <el-option label="全部" value="" />
+          <el-option label="草稿" value="draft" />
+          <el-option label="进行中" value="inProgress" />
+          <el-option label="已完成" value="completed" />
+          <el-option label="已归档" value="archived" />
+        </el-select>
+
+        <el-select v-model="sortBy" placeholder="排序方式" style="width: 150px">
+          <el-option label="最新创建" value="createTime" />
+          <el-option label="最近更新" value="updateTime" />
+          <el-option label="分镜数量" value="shotCount" />
         </el-select>
       </div>
 
-      <div v-loading="loading" class="project-grid">
+      <div v-loading="loading" class="projects-grid">
+        <div v-if="projects.length === 0" class="empty-state">
+          <el-icon :size="80" color="#dcdfe6"><FolderOpened /></el-icon>
+          <p>暂无项目</p>
+          <el-button type="primary" :icon="Plus" @click="handleCreateProject">
+            创建第一个项目
+          </el-button>
+        </div>
+
         <div
-          v-for="project in filteredProjects"
+          v-for="project in projects"
           :key="project.id"
           class="project-card"
           @click="handleProjectClick(project)"
         >
           <div class="project-cover">
-            <el-image
-              :src="project.coverUrl || defaultCover"
-              :preview-src-list="[project.coverUrl]"
-              fit="cover"
-              lazy
-            >
-              <template #error>
-                <div class="image-error">
-                  <el-icon><Picture /></el-icon>
+            <el-image :src="project.coverUrl || defaultCover" fit="cover" class="cover-image">
+              <template #placeholder>
+                <div class="image-placeholder">
+                  <el-icon :size="48"><VideoCamera /></el-icon>
                 </div>
               </template>
             </el-image>
-            <div class="project-status" :class="project.projectStatus">
-              {{ project.projectStatus }}
+            <div class="project-status">
+              <el-tag :type="getStatusType(project.projectStatus)" size="small">
+                {{ getStatusText(project.projectStatus) }}
+              </el-tag>
             </div>
           </div>
 
           <div class="project-info">
-            <h3 class="project-title">{{ project.projectName }}</h3>
-            <p class="project-description">{{ project.projectDescription }}</p>
+            <h3 class="project-name">{{ project.projectName }}</h3>
+            <p class="project-description">{{ project.projectDescription || '暂无描述' }}</p>
 
-            <div class="project-stats">
-              <div class="stat-item">
-                <el-icon><Film /></el-icon>
-                <span>镜头数: {{ project.shotCount || 0 }}</span>
+            <div class="project-meta">
+              <div class="meta-item">
+                <el-icon><VideoCamera /></el-icon>
+                <span>{{ project.shotCount || 0 }} 分镜</span>
               </div>
-              <div class="stat-item">
+              <div class="meta-item">
                 <el-icon><Timer /></el-icon>
-                <span>时长: {{ formatDuration(project.totalDuration) }}</span>
+                <span>{{ formatDuration(project.totalDuration || 0) }}</span>
               </div>
             </div>
 
-            <div class="project-meta">
-              <span class="meta-text">{{ formatDate(project.createTime) }}</span>
+            <div class="project-progress">
+              <el-progress
+                :percentage="calculateProgress(project)"
+                :color="getProgressColor(project)"
+                :show-text="false"
+              />
+              <span class="progress-text"> {{ calculateProgress(project) }}% </span>
             </div>
           </div>
 
           <div class="project-actions">
-            <el-dropdown
-              trigger="click"
-              @command="(command: any) => handleAction(command, project)"
+            <el-button
+              type="primary"
+              size="small"
+              :icon="Edit"
+              @click.stop="handleEditProject(project)"
             >
-              <el-button text>
-                <el-icon><More /></el-icon>
+              编辑
+            </el-button>
+            <el-dropdown @command="(cmd) => handleCommand(cmd, project)">
+              <el-button size="small" :icon="MoreFilled">
+                <el-icon><MoreFilled /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item :command="['edit', project]">编辑</el-dropdown-item>
-                  <el-dropdown-item :command="['duplicate', project]">复制</el-dropdown-item>
-                  <el-dropdown-item divided :command="['delete', project]">删除</el-dropdown-item>
+                  <el-dropdown-item command="duplicate">
+                    <el-icon><CopyDocument /></el-icon>
+                    复制项目
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" divided>
+                    <el-icon><Delete /></el-icon>
+                    删除项目
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -111,227 +141,204 @@
         </div>
       </div>
 
-      <div v-if="filteredProjects.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无项目" />
+      <div v-if="!loading" class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="totalProjects"
+          :page-sizes="[12, 24, 48]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="fetchProjects"
+          @current-change="fetchProjects"
+        />
       </div>
     </div>
-
-    <el-dialog
-      v-model="createDialogVisible"
-      title="新建项目"
-      width="500px"
-      @close="handleDialogClose"
-    >
-      <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="80px">
-        <el-form-item label="项目名称" prop="projectName">
-          <el-input v-model="createForm.projectName" placeholder="请输入项目名称" />
-        </el-form-item>
-        <el-form-item label="项目类型" prop="projectType">
-          <el-select v-model="createForm.projectType" placeholder="请选择项目类型">
-            <el-option label="宣传片" value="宣传片" />
-            <el-option label="教程" value="教程" />
-            <el-option label="短视频" value="短视频" />
-            <el-option label="广告" value="广告" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目描述" prop="projectDescription">
-          <el-input
-            v-model="createForm.projectDescription"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入项目描述"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="createDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="handleCreateConfirm">
-          创建
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Picture, Film, Timer, More } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type Action } from 'element-plus'
+import {
+  Plus,
+  Search,
+  Edit,
+  MoreFilled,
+  CopyDocument,
+  Delete,
+  VideoCamera,
+  Timer,
+  Clock,
+  FolderOpened,
+} from '@element-plus/icons-vue'
 import { useProjectStore } from '@/stores/project'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const projectStore = useProjectStore()
+const userStore = useUserStore()
+const loginUser = ref(userStore.userInfo)
 
+const { projects, totalProjects } = projectStore
+const searchKeyword = ref('')
+const projectType = ref('')
+const projectStatus = ref('')
+const sortBy = ref('createTime')
+const currentPage = ref(1)
+const pageSize = ref(12)
 const loading = ref(false)
-const creating = ref(false)
-const searchQuery = ref('')
-const statusFilter = ref('')
-const typeFilter = ref('')
-const createDialogVisible = ref(false)
-const defaultCover = 'https://via.placeholder.com/300x200?text=Project+Cover'
 
-const createFormRef = ref()
-const createForm = reactive({
-  projectName: '',
-  projectDescription: '',
-  projectType: '',
-  coverUrl: '',
-  shotCount: 0,
-  totalDuration: 0,
-  isPublic: false,
-})
+const defaultCover = 'https://via.placeholder.com/400x250/667eea/ffffff?text=AI视频分镜'
 
-const filteredProjects = computed(() => {
-  return projectStore.projects.filter((project) => {
-    const matchSearch =
-      !searchQuery.value ||
-      project.projectName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      project.projectDescription?.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchStatus = !statusFilter.value || project.projectStatus === statusFilter.value
-    const matchType = !typeFilter.value || project.projectType === typeFilter.value
-    return matchSearch && matchStatus && matchType
-  })
-})
-
-const createRules = {
-  projectName: [{ required: true, message: '请输入项目名称', trigger: 'blur' }],
-  projectType: [{ required: true, message: '请选择项目类型', trigger: 'change' }],
-}
-
-const formatDuration = (duration?: number) => {
-  if (!duration) return '0:00'
-  const minutes = Math.floor(duration / 60)
-  const seconds = duration % 60
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
-const formatDate = (dateStr?: string) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('zh-CN')
-}
-
-const loadProjects = async () => {
+const fetchProjects = async () => {
+  if (loading.value) return
   loading.value = true
   try {
-    const query: any = {}
-    if (searchQuery.value) query.projectName = searchQuery.value
-    if (statusFilter.value) query.projectStatus = statusFilter.value
-    if (typeFilter.value) query.projectType = typeFilter.value
-
-    await projectStore.fetchProjects(query)
-  } catch (error: any) {
-    ElMessage.error(error.message || '加载项目失败')
+    await projectStore.fetchProjects({
+      projectName: searchKeyword.value,
+      projectType: projectType.value,
+      projectStatus: projectStatus.value,
+      sortBy: sortBy.value,
+      current: currentPage.value,
+      size: pageSize.value,
+      userId: loginUser.value?.id,
+    })
+  } catch (error) {
+    console.error('获取项目列表失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-const handleSearch = () => {
-  loadProjects()
-}
-
-const handleFilter = () => {
-  loadProjects()
+const handleCreateProject = () => {
+  router.push('/project/create')
 }
 
 const handleProjectClick = (project: any) => {
-  router.push(`/projects/${project.id}`)
+  router.push(`/project/${project.id}`)
 }
 
-const handleAction = async (command: string | string[], project: any) => {
-  if (command === 'delete') {
-    try {
-      await ElMessageBox.confirm(`确定要删除项目"${project.projectName}"吗？`, '删除确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-      await projectStore.deleteProjectAction(project.id!)
-      ElMessage.success('删除成功')
-    } catch (error: any) {
-      if (error !== 'cancel') {
-        ElMessage.error(error.message || '删除失败')
+const handleEditProject = (project: any) => {
+  router.push(`/project/${project.id}/edit`)
+}
+
+const handleCommand = async (command: any, project: any) => {
+  switch (command) {
+    case 'duplicate':
+      try {
+        await ElMessageBox.confirm('确定要复制该项目吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info',
+        })
+        await projectStore.duplicateProject(project.id)
+        ElMessage.success('复制成功')
+      } catch (error: any) {
+        if (error !== 'cancel') {
+          console.error('复制失败:', error)
+        }
       }
-    }
-  } else if (command === 'edit') {
-    router.push(`/projects/${project.id}`)
-  } else if (command === 'duplicate') {
-    handleDuplicate(project)
+      break
+
+    case 'delete':
+      try {
+        await ElMessageBox.confirm(
+          `确定要删除项目"${project.projectName}"吗？此操作不可恢复！`,
+          '警告',
+          {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+          },
+        )
+        await projectStore.deleteProject(project.id)
+      } catch (error: any) {
+        if (error !== 'cancel') {
+          console.error('删除失败:', error)
+        }
+      }
+      break
   }
 }
 
-const handleDuplicate = async (project: any) => {
-  try {
-    await projectStore.addProject({
-      projectName: `${project.projectName} - 副本`,
-      projectDescription: project.projectDescription,
-      projectType: project.projectType,
-      coverUrl: project.coverUrl,
-      shotCount: 0,
-      totalDuration: 0,
-      isPublic: false,
-    })
-    ElMessage.success('复制成功')
-  } catch (error: any) {
-    ElMessage.error(error.message || '复制失败')
+const getStatusType = (status?: string) => {
+  const statusMap: Record<string, any> = {
+    draft: 'info',
+    inProgress: 'primary',
+    completed: 'success',
+    archived: 'warning',
   }
+  return statusMap[status || ''] || 'info'
 }
 
-const handleCreateProject = () => {
-  createFormRef.value?.resetFields()
-  createForm.coverUrl = ''
-  createDialogVisible.value = true
+const getStatusText = (status?: string) => {
+  const statusMap: Record<string, string> = {
+    draft: '草稿',
+    inProgress: '进行中',
+    completed: '已完成',
+    archived: '已归档',
+  }
+  return statusMap[status || ''] || status || '未知'
 }
 
-const handleDialogClose = () => {
-  createFormRef.value?.resetFields()
+const calculateProgress = (project: any) => {
+  if (!project.shotCount) return 0
+  return Math.round((project.shotCount / 10) * 100)
 }
 
-const handleCreateConfirm = async () => {
-  if (!createFormRef.value) return
+const getProgressColor = (project: any) => {
+  const progress = calculateProgress(project)
+  if (progress === 100) return '#67c23a'
+  if (progress >= 50) return '#667eea'
+  return '#e6a23c'
+}
 
-  await createFormRef.value.validate(async (valid: boolean) => {
-    if (!valid) return
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
 
-    creating.value = true
-    try {
-      await projectStore.addProject(createForm)
-      createDialogVisible.value = false
-      ElMessage.success('创建成功')
-      loadProjects()
-    } catch (error: any) {
-      ElMessage.error(error.message || '创建失败')
-    } finally {
-      creating.value = false
-    }
-  })
+const formatDate = (date: string) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('zh-CN')
 }
 
 onMounted(() => {
-  loadProjects()
+  fetchProjects()
 })
 </script>
 
 <style scoped>
 .project-list-container {
-  min-height: 100vh;
-  background: #f5f7fa;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
 }
 
-.project-header {
+.page-header {
+  padding: 24px 32px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-base);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
-.project-header h1 {
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -340,34 +347,63 @@ onMounted(() => {
   gap: 12px;
 }
 
-.project-content {
-  padding: 24px;
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
 }
 
-.filter-section {
-  margin-bottom: 24px;
+.filters-bar {
   display: flex;
   align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  box-shadow: var(--shadow-base);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.project-grid {
+.projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
+  min-height: 200px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin-top: 16px;
+  margin-bottom: 24px;
 }
 
 .project-card {
-  background: white;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: var(--shadow-base);
+  transition: all 0.3s ease;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-base);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .project-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
 }
 
 .project-cover {
@@ -375,47 +411,47 @@ onMounted(() => {
   width: 100%;
   height: 180px;
   overflow: hidden;
+  background: var(--bg-hover);
 }
 
-.project-cover :deep(.el-image) {
+.cover-image {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-.image-error {
-  width: 100%;
-  height: 100%;
+.project-card:hover .cover-image {
+  transform: scale(1.05);
+}
+
+.image-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f7fa;
-  color: #909399;
-  font-size: 40px;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-hover);
+  color: var(--text-placeholder);
 }
 
 .project-status {
   position: absolute;
   top: 12px;
   right: 12px;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: white;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.project-status:empty {
-  display: none;
 }
 
 .project-info {
   padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.project-title {
+.project-name {
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -424,49 +460,52 @@ onMounted(() => {
 
 .project-description {
   font-size: 14px;
-  color: #909399;
+  color: var(--text-secondary);
   margin: 0 0 12px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 42px;
-}
-
-.project-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #606266;
+  white-space: nowrap;
 }
 
 .project-meta {
-  font-size: 12px;
-  color: #909399;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-regular);
 }
 
-.meta-text {
+.meta-item {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.project-actions {
-  position: absolute;
-  top: 12px;
-  left: 12px;
+.project-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
 }
 
-.empty-state {
-  padding: 60px 0;
-  text-align: center;
+.progress-text {
+  font-size: 12px;
+  color: var(--text-regular);
+  white-space: nowrap;
+}
+
+.project-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-base);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg-hover);
+}
+
+.pagination-container {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
 }
 </style>

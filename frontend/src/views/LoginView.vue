@@ -1,9 +1,13 @@
 <template>
   <div class="login-container">
-    <div class="login-box">
+    <div class="login-background"></div>
+
+    <div class="login-card">
       <div class="login-header">
-        <h1>AI Script Manager</h1>
-        <p>AI视频分镜剧本管理系统</p>
+        <div class="logo">
+          <el-icon :size="48"><VideoCamera /></el-icon>
+          <h1>AI视频分镜管理系统</h1>
+        </div>
       </div>
 
       <el-tabs v-model="activeTab" class="login-tabs">
@@ -12,9 +16,9 @@
             <el-form-item prop="userAccount">
               <el-input
                 v-model="loginForm.userAccount"
-                placeholder="请输入用户名"
+                placeholder="请输入账号"
+                :prefix-icon="User"
                 size="large"
-                prefix-icon="User"
                 clearable
               />
             </el-form-item>
@@ -24,11 +28,16 @@
                 v-model="loginForm.userPassword"
                 type="password"
                 placeholder="请输入密码"
+                :prefix-icon="Lock"
                 size="large"
-                prefix-icon="Lock"
                 show-password
                 @keyup.enter="handleLogin"
               />
+            </el-form-item>
+
+            <el-form-item>
+              <el-checkbox v-model="loginForm.rememberMe"> 记住密码 </el-checkbox>
+              <el-link type="primary" :underline="false"> 忘记密码？ </el-link>
             </el-form-item>
 
             <el-form-item>
@@ -36,18 +45,16 @@
                 type="primary"
                 size="large"
                 :loading="loading"
-                class="login-btn"
+                class="login-button"
                 @click="handleLogin"
               >
-                {{ loading ? '登录中...' : '登录' }}
+                登录
               </el-button>
             </el-form-item>
 
             <div class="login-footer">
-              <el-link type="primary" :underline="false" @click="handleRegister">
-                注册新账号
-              </el-link>
-              <el-link type="primary" :underline="false"> 忘记密码 </el-link>
+              还没有账号？
+              <el-link type="primary" :underline="false" @click="goToRegister"> 立即注册 </el-link>
             </div>
           </el-form>
         </el-tab-pane>
@@ -63,8 +70,8 @@
               <el-input
                 v-model="registerForm.userName"
                 placeholder="请输入用户名"
+                :prefix-icon="User"
                 size="large"
-                prefix-icon="User"
                 clearable
               />
             </el-form-item>
@@ -72,9 +79,9 @@
             <el-form-item prop="userAccount">
               <el-input
                 v-model="registerForm.userAccount"
-                placeholder="请输入邮箱"
+                placeholder="请输入账号"
+                :prefix-icon="User"
                 size="large"
-                prefix-icon="Message"
                 clearable
               />
             </el-form-item>
@@ -83,9 +90,9 @@
               <el-input
                 v-model="registerForm.userPassword"
                 type="password"
-                placeholder="请输入密码（至少8位，包含字母和数字）"
+                placeholder="请输入密码"
+                :prefix-icon="Lock"
                 size="large"
-                prefix-icon="Lock"
                 show-password
               />
             </el-form-item>
@@ -95,8 +102,8 @@
                 v-model="registerForm.checkPassword"
                 type="password"
                 placeholder="请再次输入密码"
+                :prefix-icon="Lock"
                 size="large"
-                prefix-icon="Lock"
                 show-password
               />
             </el-form-item>
@@ -106,15 +113,16 @@
                 type="primary"
                 size="large"
                 :loading="loading"
-                class="register-btn"
+                class="register-button"
                 @click="handleRegister"
               >
-                {{ loading ? '注册中...' : '注册' }}
+                注册
               </el-button>
             </el-form-item>
 
-            <div class="login-footer">
-              <el-link type="primary" :underline="false" @click="handleLogin"> 返回登录 </el-link>
+            <div class="register-footer">
+              已有账号？
+              <el-link type="primary" :underline="false" @click="goToLogin"> 立即登录 </el-link>
             </div>
           </el-form>
         </el-tab-pane>
@@ -124,11 +132,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { User, Lock, VideoCamera } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -136,21 +144,15 @@ const userStore = useUserStore()
 const activeTab = ref('login')
 const loading = ref(false)
 
-const loginFormRef = ref()
+const loginFormRef = ref<FormInstance>()
+const registerFormRef = ref<FormInstance>()
+
 const loginForm = reactive({
   userAccount: '',
   userPassword: '',
+  rememberMe: false,
 })
 
-const loginRules = {
-  userAccount: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  userPassword: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6位', trigger: 'blur' },
-  ],
-}
-
-const registerFormRef = ref()
 const registerForm = reactive({
   userName: '',
   userAccount: '',
@@ -168,75 +170,116 @@ const validatePassword = (rule: any, value: any, callback: any) => {
   }
 }
 
-const registerRules = {
-  userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+const loginRules: FormRules = {
   userAccount: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] },
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '账号长度在3到20个字符', trigger: 'blur' },
   ],
   userPassword: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6位', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6到20个字符', trigger: 'blur' },
   ],
-  checkPassword: [{ required: true, validator: validatePassword, trigger: 'blur' }],
+}
+
+const registerRules: FormRules = {
+  userName: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 2, max: 20, message: '用户名长度在2到20个字符', trigger: 'blur' },
+  ],
+  userAccount: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '账号长度在3到20个字符', trigger: 'blur' },
+  ],
+  userPassword: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6到20个字符', trigger: 'blur' },
+  ],
+  checkPassword: [{ validator: validatePassword, trigger: 'blur' }],
 }
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
-  await loginFormRef.value.validate(async (valid: boolean) => {
+  await loginFormRef.value.validate(async (valid) => {
     if (!valid) return
 
     loading.value = true
     try {
-      await userStore.loginAction(loginForm)
-      ElMessage.success('登录成功')
+      await userStore.login(loginForm.userAccount, loginForm.userPassword)
 
       const redirect = route.query.redirect as string
-      await router.push(redirect || '/projects')
-    } catch (error: any) {
-      ElMessage.error(error.message || '登录失败')
+      router.push(redirect || '/project')
+    } catch (error) {
+      console.error('登录失败:', error)
     } finally {
       loading.value = false
     }
   })
 }
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (!registerFormRef.value) return
 
-  registerFormRef.value.validate(async (valid: boolean) => {
+  await registerFormRef.value.validate(async (valid) => {
     if (!valid) return
 
     loading.value = true
     try {
-      await userStore.registerAction(registerForm)
-      ElMessage.success('注册成功，请登录')
+      await userStore.register(
+        registerForm.userAccount,
+        registerForm.userPassword,
+        registerForm.checkPassword,
+      )
       activeTab.value = 'login'
-    } catch (error: any) {
-      ElMessage.error(error.message || '注册失败')
+    } catch (error) {
+      console.error('注册失败:', error)
     } finally {
       loading.value = false
     }
   })
+}
+
+const goToLogin = () => {
+  activeTab.value = 'login'
+}
+
+const goToRegister = () => {
+  activeTab.value = 'register'
 }
 </script>
 
 <style scoped>
 .login-container {
+  width: 100%;
+  height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.login-box {
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%);
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
   width: 420px;
   padding: 40px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .login-header {
@@ -244,15 +287,22 @@ const handleRegister = () => {
   margin-bottom: 30px;
 }
 
-.login-header h1 {
-  color: #333;
-  font-size: 28px;
-  margin-bottom: 10px;
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
-.login-header p {
-  color: #666;
-  font-size: 14px;
+.logo .el-icon {
+  color: #667eea;
+}
+
+.logo h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
 }
 
 .login-tabs {
@@ -261,26 +311,26 @@ const handleRegister = () => {
 
 .login-form,
 .register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.login-btn,
-.register-btn {
-  width: 100%;
-  margin-top: 10px;
-}
-
-.login-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-top: 20px;
+}
+
+.login-button,
+.register-button {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+}
+
+.login-footer,
+.register-footer {
+  text-align: center;
+  margin-top: 20px;
+  color: #606266;
   font-size: 14px;
 }
 
-.login-footer :deep(.el-link) {
+.login-footer .el-link,
+.register-footer .el-link {
   font-size: 14px;
 }
 </style>

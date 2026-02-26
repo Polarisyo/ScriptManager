@@ -93,6 +93,7 @@ create table if not exists shot_material
     materialType    VARCHAR(50) COMMENT '素材类型：image(图片)/video(视频)/audio(音频)',
     materialRole    VARCHAR(50) COMMENT '素材角色：background(背景)/character(角色)/prop(道具)/audio(音效)',
     materialDesc    VARCHAR(512) comment '素材描述',
+    materUrl        varchar(500) comment '素材路径',
 
     isDeleted       TINYINT(1) DEFAULT 0 COMMENT '软删除标记（0:正常, 1:已删除）',
     createTime      DATETIME   DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

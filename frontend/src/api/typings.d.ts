@@ -1,7 +1,19 @@
 declare namespace API {
+  type BaseResponseBoolean = {
+    code?: number
+    data?: boolean
+    message?: string
+  }
+
   type BaseResponseListProjectVO = {
     code?: number
     data?: ProjectVO[]
+    message?: string
+  }
+
+  type BaseResponseListShotVO = {
+    code?: number
+    data?: ShotVO[]
     message?: string
   }
 
@@ -17,22 +29,25 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseShotVO = {
+    code?: number
+    data?: ShotVO
+    message?: string
+  }
+
   type BaseResponseUserVO = {
     code?: number
     data?: UserVO
     message?: string
   }
 
-  type getInfoParams = {
-    id: number
+  type DeleteRequest = {
+    id?: number
+    userId?: number
   }
 
-  type pageParams = {
-    page: PageUser
-  }
-
-  type PageUser = {
-    records?: User[]
+  type PageShotMaterial = {
+    records?: ShotMaterial[]
     pageNumber?: number
     pageSize?: number
     totalPage?: number
@@ -48,6 +63,7 @@ declare namespace API {
     shotCount?: number
     totalDuration?: number
     isPublic?: boolean
+    userId?: number
   }
 
   type ProjectEditRequest = {
@@ -61,6 +77,7 @@ declare namespace API {
     progressRate?: number
     isPublic?: boolean
     projectStatus?: string
+    userId?: number
   }
 
   type ProjectQueryRequest = {
@@ -84,27 +101,90 @@ declare namespace API {
     progressRate?: number
     isPublic?: boolean
     user?: UserVO
+    shotOrder?: number[]
   }
 
-  type removeParams = {
+  type ShotAddRequest = {
+    userId?: number
+    projectId?: number
+    shotTitle?: string
+    shotDesc?: string
+    duration?: number
+    orderIndex?: number
+    shotStatus?: string
+    scriptContent?: string
+    shotOrder?: number[]
+  }
+
+  type ShotEditRequest = {
+    shotId?: number
+    userId?: number
+    projectId?: number
+    shotTitle?: string
+    shotDesc?: string
+    duration?: number
+    orderIndex?: number
+    shotStatus?: string
+    scriptContent?: string
+    shotOrder?: number[]
+  }
+
+  type ShotMaterial = {
+    materialId?: number
+    shotId?: number
+    materialType?: string
+    materialRole?: string
+    materialDesc?: string
+    isDeleted?: boolean
+    createTime?: string
+    updateTime?: string
+  }
+
+  type shotmaterialGetInfoParams = {
     id: number
   }
 
-  type User = {
+  type shotmaterialPageParams = {
+    page: PageShotMaterial
+  }
+
+  type shotmaterialRemoveParams = {
+    id: number
+  }
+
+  type ShotQueryRequest = {
+    userId?: number
+    projectId?: number
+    shotTitle?: string
+    shotDesc?: string
+    duration?: number
+    orderIndex?: number
+    shotStatus?: string
+    scriptContent?: string
+  }
+
+  type ShotVO = {
+    shotId?: number
+    projectId?: number
+    shotTitle?: string
+    shotDesc?: string
+    duration?: number
+    orderIndex?: number
+    shotStatus?: string
+    scriptContent?: string
+  }
+
+  type SingleQueryRequest = {
     id?: number
+    userId?: number
+  }
+
+  type UserEditRequest = {
+    userId?: number
     userAccount?: string
-    userPassword?: string
     userName?: string
     userAvatar?: string
     userProfile?: string
-    userRole?: string
-    editTime?: string
-    createTime?: string
-    updateTime?: string
-    isDelete?: number
-    subscriptionPlan?: string
-    aiCredits?: number
-    lastLoginTime?: string
   }
 
   type UserLoginRequest = {

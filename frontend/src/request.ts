@@ -1,17 +1,18 @@
 import axios from 'axios'
-import myAxios from './request'
+import { ElMessage } from 'element-plus'
 
-const myAxiosInstance = axios.create({
-  // 使用代理解决跨域问题
-  baseURL: '/',
+const myAxios = axios.create({
+  //前端解决跨域问题配置
+  // baseURL: '',
+  baseURL: '/api',
   timeout: 60000,
   withCredentials: true,
 })
 
-export default myAxiosInstance
+export default myAxios
 
 // 添加请求拦截器
-axios.interceptors.request.use(
+myAxios.interceptors.request.use(
   function (config) {
     // 在发送请求之前做些什么
     return config
@@ -23,7 +24,7 @@ axios.interceptors.request.use(
 )
 
 // 全局响应拦截器
-myAxiosInstance.interceptors.response.use(
+myAxios.interceptors.response.use(
   function (response) {
     const { data } = response
     // 未登录
@@ -31,10 +32,10 @@ myAxiosInstance.interceptors.response.use(
       // 不是登录的请求，并且用户目前不是已经在用户登录页面，则跳转到登录页面
       // 具体哪些可以不登录就访问就看是否返回40100
       if (
-        !response.request.responseURL.includes('user/login') &&
+        !response.request.responseURL.includes('user/get/login') &&
         !window.location.pathname.includes('/user/login')
       ) {
-        // message.warning('请先登录')
+        ElMessage.warning('请先登录')
         window.location.href = `/user/login?redirect=${window.location.href}`
       }
     }

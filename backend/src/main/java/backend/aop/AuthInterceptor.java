@@ -55,7 +55,7 @@ public class AuthInterceptor {
         }
         //获取操作用户id
         Long reqUserId = getReqUserId(joinPoint);
-        ThrowUtils.throwIf(!Objects.equals(reqUserId, loginUser.getId()), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf((!Objects.equals(loginUser.getId(), reqUserId)), ErrorCode.NO_AUTH_ERROR);
         if (userRoleEnum != UserRoleEnum.ADMIN && userRoleEnum != mustRoleEnum) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }

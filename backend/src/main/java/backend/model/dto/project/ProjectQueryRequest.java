@@ -26,7 +26,7 @@ public class ProjectQueryRequest implements Serializable {
 
     /**
      * 项目状态: draft(草稿)/inProgress(进行中)/completed(已完成)/archived(已归档)
-     */
+         */
 
     private String projectStatus;
     /**

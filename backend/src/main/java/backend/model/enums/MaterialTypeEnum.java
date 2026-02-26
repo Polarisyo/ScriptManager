@@ -5,7 +5,11 @@ import lombok.Getter;
 
 @Getter
 public enum MaterialTypeEnum {
-    BACKGROUND("背景", "background"), CHARACTER("角色", "character"), PROP("道具", "prop"), AUDIO("音效", "audio");
+    BACKGROUND("背景", "background"),
+    CHARACTER("角色", "character"),
+    PROP("道具", "prop"),
+    AUDIO("音效", "audio");
+
     private final String text;
     private final String value;
 

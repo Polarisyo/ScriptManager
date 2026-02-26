@@ -2,26 +2,28 @@
 /* eslint-disable */
 import request from '@/request'
 
-/** GET /user/getInfo/${id} */
-export async function getInfo(params: API.getInfoParams, options?: { [key: string]: any }) {
-  const { id } = params
-  return request<API.User>(`/user/getInfo/${id}`, {
+/** 此处后端没有提供注释 PUT /user/edit */
+export async function userUpdate(body: API.UserEditRequest, options?: { [key: string]: any }) {
+  return request<API.BaseResponseUserVO>('/user/edit', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 GET /user/get/login */
+export async function userGetLoginUser(options?: { [key: string]: any }) {
+  return request<API.BaseResponseUserVO>('/user/get/login', {
     method: 'GET',
     ...(options || {}),
   })
 }
 
-/** GET /user/list */
-export async function list(query?: { [key: string]: any }, options?: { [key: string]: any }) {
-  return request<API.User[]>('/user/list', {
-    method: 'GET',
-    params: query,
-    ...(options || {}),
-  })
-}
-
-/** POST /user/login */
-export async function login(body: API.UserLoginRequest, options?: { [key: string]: any }) {
+/** 此处后端没有提供注释 POST /user/login */
+export async function userLogin(body: API.UserLoginRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseUserVO>('/user/login', {
     method: 'POST',
     headers: {
@@ -32,20 +34,11 @@ export async function login(body: API.UserLoginRequest, options?: { [key: string
   })
 }
 
-/** GET /user/page */
-export async function page(
-  page?: { pageNumber?: number; pageSize?: number },
-  options?: { [key: string]: any },
+/** 此处后端没有提供注释 POST /user/register */
+export async function userRegister(
+  body: API.UserRegisterRequest,
+  options?: { [key: string]: any }
 ) {
-  return request<API.PageUser>('/user/page', {
-    method: 'GET',
-    params: page,
-    ...(options || {}),
-  })
-}
-
-/** POST /user/register */
-export async function register(body: API.UserRegisterRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong>('/user/register', {
     method: 'POST',
     headers: {
@@ -56,19 +49,10 @@ export async function register(body: API.UserRegisterRequest, options?: { [key: 
   })
 }
 
-/** DELETE /user/remove/${id} */
-export async function remove(params: API.removeParams, options?: { [key: string]: any }) {
-  const { id } = params
-  return request<boolean>(`/user/remove/${id}`, {
+/** 此处后端没有提供注释 DELETE /user/remove */
+export async function userRemove(body: API.DeleteRequest, options?: { [key: string]: any }) {
+  return request<boolean>('/user/remove', {
     method: 'DELETE',
-    ...(options || {}),
-  })
-}
-
-/** PUT /user/update */
-export async function update(body: API.User, options?: { [key: string]: any }) {
-  return request<boolean>('/user/update', {
-    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
