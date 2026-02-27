@@ -208,6 +208,7 @@ const fetchProjects = async () => {
     console.error('获取项目列表失败:', error)
   } finally {
     loading.value = false
+    console.log(projects.values)
   }
 }
 

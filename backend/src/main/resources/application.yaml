@@ -1,0 +1,33 @@
+server:
+  port: 8123
+  servlet:
+    session:
+      cookie:
+        name: JSESSIONID
+        http-only: true              # 允许跨域
+        path: /
+        max-age: 86400
+      timeout: 30m
+    context-path: /api
+spring:
+  application:
+    name: ScriptManager
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/script_manager
+    username: root
+    password: 618920
+knife4j:
+  enable: true
+  openapi:
+    title: 接口文档
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - backend.controller
+
+mybatis-flex:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl    # SLF4J输出

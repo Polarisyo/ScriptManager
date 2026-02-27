@@ -93,10 +93,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR);
         QueryWrapper wrapper = QueryWrapper.create();
         wrapper.select().eq("userId", userId)
-                .like("projectName", projectName)
-                .eq("projectType", projectType)
+                .like("projectName", projectName, StrUtil.isNotBlank(projectName))
+                .eq("projectType", projectType, StrUtil.isNotBlank(projectType))
                 .eq("isPublic",isPublic)
-                .eq("projectStatus", projectStatus);
+                .eq("projectStatus", projectStatus, StrUtil.isNotBlank(projectStatus));
         List<Project> projects = this.getMapper().selectListByQuery(wrapper);
 
         return projects.stream().map(this::getProjectVO).toList();
